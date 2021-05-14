@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {  
     Card,
     TextField,
@@ -49,16 +49,22 @@ const initialState = {
 
 export default function CommentBlock(){
     const dispatch = useDispatch();
-    const { result } = JSON.parse(localStorage.getItem('profile'));
-    const currentId  = result._id;
     const { postData } = useSelector(state => state.postData);
     const { comments } = postData;
     const idOfPost = postData._id
     const classes = useStyle();
     const [comment, setComment] = useState('');
+    const [loggedInUserId, setUserId] = useState('');
+
+    useEffect(() => {
+        if (localStorage.getItem('profile')) {
+            const { result } = JSON.parse(localStorage.getItem('profile'));
+            setUserId(result?._id);
+        }
+    })
     const submitComment = () => {
         // Handle Submission here
-        const formData = { id:idOfPost, userId:currentId, content:comment};
+        const formData = { id:idOfPost, userId:loggedInUserId, content:comment};
         dispatch(createComment(formData,idOfPost));
     }
     
@@ -92,7 +98,7 @@ export default function CommentBlock(){
                 </ListItem>
                 <Typography className={classes.reply} variant="body1">
                     { content }
-                    { currentId === _id ? 
+                    { loggedInUserId === _id ? 
                     <Button variant="text" color="secondary" onClick={()=>{handleDelete(commentId,postId)}}>DELETE</Button>
                     : null }
                 </Typography>
@@ -104,7 +110,7 @@ export default function CommentBlock(){
         <Card className={classes.root}>
             <Typography variant="h5">Comments:</Typography>
             <TextField fullWidth multiline rows={4} variant="outlined" onChange={(event) => setComment(event.target.value)}/>
-            <Button classes={classes.submit} fullWidth variant="contained" color="primary" onClick={submitComment}>SUBMIT COMMENT</Button>
+            <Button classes={classes.submit} fullWidth variant="contained" color="primary" disabled={!loggedInUserId} onClick={submitComment}>SUBMIT COMMENT</Button>
             { commentBlocks }
         </Card>
     );
